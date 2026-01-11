@@ -1,3 +1,8 @@
 [theme]
-base="light"
+base = "dark"
 
+primaryColor = "#4F8EF7"        # azul chamativo (call to action)
+backgroundColor = "#0E1117"     # fundo principal (dark real)
+secondaryBackgroundColor = "#161B22"  # cards / sidebar
+textColor = "#E6EDF3"           # texto claro
+font = "sans serif"
