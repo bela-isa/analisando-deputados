@@ -14,7 +14,7 @@ from datetime import datetime
 # ----------------------------
 st.set_page_config(
     page_title="Análise de Deputados Federais",
-    page_icon="🏛️",
+    #page_icon="🏛️",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -577,17 +577,17 @@ def kpi_row(df: pd.DataFrame):
 
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        st.metric("🏛️ Deputados", _fmt_int(total))
+        st.metric(" Deputados", _fmt_int(total))
     with c2:
-        st.metric("🎭 Partidos", _fmt_int(n_partidos))
+        st.metric(" Partidos", _fmt_int(n_partidos))
     with c3:
-        st.metric("🗺️ UFs", _fmt_int(n_ufs))
+        st.metric(" UFs", _fmt_int(n_ufs))
     with c4:
-        st.metric("👥 Maior partido", f"{top_partido}", 
+        st.metric(" Maior partido", f"{top_partido}", 
                  delta=f"{_fmt_int(top_qtd)} deputados" if top_partido != "-" else None)
 
 
-def download_csv_button(df: pd.DataFrame, filename: str, label: str = "📥 Baixar CSV"):
+def download_csv_button(df: pd.DataFrame, filename: str, label: str = " Baixar CSV"):
     csv = df.to_csv(index=False).encode("utf-8")
     st.download_button(
         label=label,
@@ -644,7 +644,7 @@ def render_table(df: pd.DataFrame, percent_col: str | None = None):
 # ----------------------------
 col_title, col_refresh = st.columns([4, 1])
 with col_title:
-    st.markdown('<h1 class="title-neon">🏛️ Análise de Deputados Federais</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="title-neon"> Análise de Deputados Federais</h1>', unsafe_allow_html=True)
     st.caption("Dashboard interativa para explorar a composição atual da Câmara: partidos, UFs e distribuição proporcional.")
 
 
@@ -666,9 +666,9 @@ with st.sidebar:
 
     col_a, col_b = st.columns(2)
     with col_a:
-        refresh = st.button("🔄 Atualizar", use_container_width=True)
+        refresh = st.button(" Atualizar", use_container_width=True)
     with col_b:
-        clear = st.button("🗑️ Limpar", use_container_width=True)
+        clear = st.button(" Limpar", use_container_width=True)
 
     if clear:
         st.session_state.cache_df = pd.DataFrame()
@@ -677,7 +677,7 @@ with st.sidebar:
         st.toast("✅ Cache limpo com sucesso!", icon="🗑️")
 
     st.divider()
-    st.markdown("## 🔍 Filtros")
+    st.markdown("##  Filtros")
 
 
 # ----------------------------
@@ -702,13 +702,13 @@ all_ufs = sorted(df["siglaUf"].dropna().unique().tolist())
 
 with st.sidebar:
     partidos_sel = st.multiselect(
-        "🎭 Partidos", 
+        " Partidos", 
         all_partidos, 
         default=[],
         help="Selecione um ou mais partidos para filtrar"
     )
     ufs_sel = st.multiselect(
-        "🗺️ UFs", 
+        " UFs", 
         all_ufs, 
         default=[],
         help="Selecione uma ou mais UFs para filtrar"
@@ -717,10 +717,10 @@ with st.sidebar:
     # Show active filters count
     active_filters = len(partidos_sel) + len(ufs_sel)
     if active_filters > 0:
-        st.info(f"🎯 {active_filters} filtro(s) ativo(s)")
+        st.info(f" {active_filters} filtro(s) ativo(s)")
 
     st.divider()
-    st.markdown("## 📊 Exibição")
+    st.markdown("##  Exibição")
     sort_by = st.selectbox(
         "📑 Ordenar por", 
         ["nome", "siglaPartido", "siglaUf"], 
@@ -744,20 +744,20 @@ with st.sidebar:
         st.markdown('<span class="status-badge status-error">🟡 Cache desatualizado</span>', unsafe_allow_html=True)
         st.caption("⚠️ API temporariamente indisponível")
     
-    st.caption("📡 Fonte: Dados Abertos da Câmara")
+    st.caption(" Fonte: Dados Abertos da Câmara")
 
 
 df_f = apply_filters(df, partidos_sel=partidos_sel, ufs_sel=ufs_sel, sort_by=sort_by)
 
 # Show filter results
 if active_filters > 0:
-    st.info(f"📊 Mostrando {len(df_f):,} de {len(df):,} deputados")
+    st.info(f" Mostrando {len(df_f):,} de {len(df):,} deputados")
 
 
 # ----------------------------
 # Tabs
 # ----------------------------
-tabs = st.tabs(["📊 Visão geral", "🎭 Partidos", "🗺️ Estados", "👤 Deputados", "ℹ️ Sobre"])
+tabs = st.tabs([" Visão geral", " Partidos", " Estados", " Deputados", " Sobre"])
 
 
 # --- Visão geral ---
@@ -767,25 +767,25 @@ with tabs[0]:
 
     col1, col2 = st.columns(2, gap="large")
     with col1:
-        st.markdown("### 🎭 Deputados por partido")
+        st.markdown("###  Deputados por partido")
         st.pyplot(chart_partidos_bar(df_f), clear_figure=True)
 
     with col2:
-        st.markdown("### 🗺️ Deputados por UF")
+        st.markdown("###  Deputados por UF")
         st.pyplot(chart_estados_bar(df_f), clear_figure=True)
 
     # Advanced analysis
-    with st.expander("📈 Análises avançadas", expanded=False):
+    with st.expander(" Análises avançadas", expanded=False):
         colA, colB = st.columns([1.15, 1.35], gap="small")
         with colA:
             st.pyplot(chart_top5_pizza(df_f), clear_figure=True)
         with colB:
-            st.markdown("### 💾 Exportação")
+            st.markdown("###  Exportação")
             st.caption("Baixe os dados considerando os filtros atuais.")
-            download_csv_button(df_f, "deputados_filtrados.csv", label="📥 Baixar CSV (com filtros)")
+            download_csv_button(df_f, "deputados_filtrados.csv", label=" Baixar CSV (com filtros)")
 
     st.divider()
-    download_csv_button(df_f, "deputados_filtrados.csv", label="📥 Baixar todos os dados")
+    download_csv_button(df_f, "deputados_filtrados.csv", label=" Baixar todos os dados")
 
 
 # --- Partidos ---
@@ -795,7 +795,7 @@ with tabs[1]:
     render_table(cont_partidos, percent_col="qtdDeputados")
 
     st.divider()
-    download_csv_button(cont_partidos, "contagem_partidos.csv", label="📥 Baixar ranking de partidos")
+    download_csv_button(cont_partidos, "contagem_partidos.csv", label=" Baixar ranking de partidos")
 
 
 # --- Estados ---
@@ -805,12 +805,12 @@ with tabs[2]:
     render_table(cont_ufs, percent_col="qtdDeputados")
 
     st.divider()
-    download_csv_button(cont_ufs, "contagem_estados.csv", label="📥 Baixar ranking de UFs")
+    download_csv_button(cont_ufs, "contagem_estados.csv", label=" Baixar ranking de UFs")
 
 
 # --- Deputados ---
 with tabs[3]:
-    st.markdown("### 🔎 Explorar deputados")
+    st.markdown("###  Explorar deputados")
     
     col_search, col_count = st.columns([3, 1])
     with col_search:
@@ -826,7 +826,7 @@ with tabs[3]:
     df_view = df_f.copy()
     if search.strip():
         df_view = df_view[df_view["nome"].str.contains(search, case=False, na=False)]
-        st.info(f"🔍 Encontrados {len(df_view)} resultado(s) para '{search}'")
+        st.info(f" Encontrados {len(df_view)} resultado(s) para '{search}'")
 
     # Rename columns for display
     table_df = df_view[["nome", "siglaPartido", "siglaUf"]].copy()
@@ -844,7 +844,7 @@ with tabs[3]:
     )
 
     st.divider()
-    st.markdown("### 👤 Detalhes do deputado")
+    st.markdown("###  Detalhes do deputado")
     options = df_view["nome"].dropna().unique().tolist()
     selected = st.selectbox(
         "Selecionar deputado", 
@@ -857,30 +857,30 @@ with tabs[3]:
         deputy_details_card(row)
 
     st.divider()
-    download_csv_button(df_view, "deputados_explorados.csv", label="📥 Baixar resultados da busca")
+    download_csv_button(df_view, "deputados_explorados.csv", label=" Baixar resultados da busca")
 
 
 # --- Sobre ---
 with tabs[4]:
     st.markdown(
         """
-### 📋 Sobre este projeto
+###  Sobre este projeto
 
 Esta dashboard foi desenvolvida para facilitar a análise da composição atual da Câmara dos Deputados, oferecendo:
 
-- 📊 **Visualizações interativas** de distribuição por partido e UF
-- 🔍 **Filtros avançados** para segmentação de dados
-- 💾 **Exportação em CSV** para análises externas
-- ⚡ **Cache inteligente** para melhor performance
-- 🎨 **Interface moderna** com design futurista
+-  **Visualizações interativas** de distribuição por partido e UF
+-  **Filtros avançados** para segmentação de dados
+-  **Exportação em CSV** para análises externas
+-  **Cache inteligente** para melhor performance
+-  **Interface moderna** com design futurista
 
-#### 🛠️ Stack tecnológica
+####  Stack tecnológica
 - **Python** - Linguagem de programação
 - **Pandas** - Manipulação de dados
 - **Streamlit** - Framework web
 - **Matplotlib** - Visualizações
 
-#### 📡 Fonte de dados
+####  Fonte de dados
 API de Dados Abertos da Câmara dos Deputados
 
 ---
