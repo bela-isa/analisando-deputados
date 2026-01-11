@@ -1,10 +1,8 @@
 # app.py
-# Futuristic / minimal (dark) Streamlit dashboard with subtle neon accents
-# + higher-contrast bar charts
-# + "Destaques" cards (Top 5) instead of donut chart
-# + elegant tables (zebra + hover + header polish + % column)
-# + automated "Testes" tab (smoke tests) to validate core functionalities
-# + CSV downloads: (1) filtros atuais, (2) base completa (sem filtros)  ✅ agora são diferentes
+# Futuristic / minimal (dark) Streamlit dashboard
+# - Destaques (Top 5) em cards (sem gráfico)
+# - Exportações com keys únicas (corrige StreamlitDuplicateElementId)
+# - Aba "Testes" com smoke tests
 #
 # Requisitos: streamlit, pandas, requests, matplotlib
 
@@ -27,7 +25,7 @@ st.set_page_config(
 )
 
 # ----------------------------
-# Futuristic minimal UI (CSS)
+# UI (CSS)
 # ----------------------------
 st.markdown(
     """
@@ -39,27 +37,21 @@ st.markdown(
   --text: #E6EDF3;
   --muted:#9AA6B2;
   --border: rgba(255,255,255,0.07);
-  --neon: #39FFB6;         /* neon mint */
-  --neon2:#5D5BFF;         /* neon violet */
-  --neon3:#4F8EF7;         /* electric blue */
+  --neon: #39FFB6;
+  --neon2:#5D5BFF;
+  --neon3:#4F8EF7;
 }
 
 .block-container { padding-top: 2rem; padding-bottom: 2.5rem; }
 
-/* Sidebar */
 section[data-testid="stSidebar"]{
   background: linear-gradient(180deg, #070A0F 0%, var(--bg) 65%);
   border-right: 1px solid var(--border);
 }
 
-/* Headings */
-h1, h2, h3{
-  font-weight: 700;
-  letter-spacing: -0.03em;
-}
+h1, h2, h3{ font-weight: 700; letter-spacing: -0.03em; }
 p, label, span { color: var(--text); }
 
-/* Subtle neon underline for main title */
 .title-neon{
   display: inline-block;
   padding-bottom: .35rem;
@@ -67,7 +59,6 @@ p, label, span { color: var(--text); }
   box-shadow: 0 14px 32px rgba(57,255,182,0.08);
 }
 
-/* Metric cards */
 [data-testid="metric-container"]{
   background: radial-gradient(1200px 160px at 10% 0%, rgba(93,91,255,0.14), rgba(0,0,0,0) 55%),
               linear-gradient(180deg, var(--panel) 0%, #0B1017 100%);
@@ -76,7 +67,6 @@ p, label, span { color: var(--text); }
   padding: 1rem 1rem;
 }
 
-/* Buttons */
 .stButton > button{
   border-radius: 12px;
   font-weight: 650;
@@ -89,21 +79,17 @@ p, label, span { color: var(--text); }
   box-shadow: 0 10px 28px rgba(57,255,182,0.12);
 }
 
-/* Inputs */
 [data-baseweb="select"] > div, [data-baseweb="input"] input{
   border-radius: 12px !important;
   border-color: rgba(255,255,255,0.12) !important;
   background-color: rgba(16,24,36,0.58) !important;
 }
 
-/* Dataframe container */
 [data-testid="stDataFrame"]{
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 16px;
   overflow: hidden;
 }
-
-/* Dataframe: header + zebra + hover */
 [data-testid="stDataFrame"] thead tr th {
   background: rgba(93, 91, 255, 0.12) !important;
   color: #E6EDF3 !important;
@@ -117,10 +103,8 @@ p, label, span { color: var(--text); }
   background-color: rgba(57,255,182,0.07) !important;
 }
 
-/* Dividers */
 hr{ border-color: rgba(255,255,255,0.08); }
 
-/* Tabs */
 button[data-baseweb="tab"]{
   font-weight: 650;
   color: var(--muted);
@@ -130,7 +114,6 @@ button[data-baseweb="tab"][aria-selected="true"]{
   border-bottom: 2px solid rgba(57,255,182,0.85) !important;
 }
 
-/* Links */
 a, a:visited { color: rgba(57,255,182,0.92); }
 
 /* Destaques cards */
@@ -234,10 +217,6 @@ def fetch_deputados_from_api() -> pd.DataFrame:
 
 
 def get_data(ttl_seconds: int, force_refresh: bool) -> tuple[pd.DataFrame, str]:
-    """
-    Returns (df, status)
-    status: 'api' | 'cache' | 'cache_stale' | 'error'
-    """
     now = time.time()
 
     if "cache_df" not in st.session_state:
@@ -281,18 +260,18 @@ def counts_table(series: pd.Series, col_name: str) -> pd.DataFrame:
 
 
 # ----------------------------
-# Charts (matplotlib) - higher contrast + subtle neon
+# Charts (matplotlib)
 # ----------------------------
 def _style_dark_axes(ax):
     fg = "#E6EDF3"
     muted = "#B6C2CF"
     panel = "#0E141B"
-    grid = (1, 1, 1, 0.10)
+    grid = (1, 1, 1, 0.12)
 
     ax.set_facecolor(panel)
     ax.tick_params(colors=muted, labelsize=10)
     for spine in ax.spines.values():
-        spine.set_color((1, 1, 1, 0.14))
+        spine.set_color((1, 1, 1, 0.16))
 
     ax.xaxis.label.set_color(muted)
     ax.yaxis.label.set_color(muted)
@@ -309,13 +288,13 @@ def chart_partidos_bar(df: pd.DataFrame) -> Figure:
     fig.patch.set_facecolor("#0B0F14")
     _style_dark_axes(ax)
 
-    neon_edge = (57 / 255, 1.0, 182 / 255, 0.85)
-    fill = (57 / 255, 1.0, 182 / 255, 0.22)
+    neon_edge = (57 / 255, 1.0, 182 / 255, 0.92)
+    fill = (57 / 255, 1.0, 182 / 255, 0.24)
 
     bars = ax.barh(counts.index, counts.values, color=fill)
     for b in bars:
         b.set_edgecolor(neon_edge)
-        b.set_linewidth(1.4)
+        b.set_linewidth(1.6)
 
     ax.set_xlabel("Quantidade")
     ax.set_ylabel("")
@@ -337,13 +316,13 @@ def chart_estados_bar(df: pd.DataFrame) -> Figure:
     fig.patch.set_facecolor("#0B0F14")
     _style_dark_axes(ax)
 
-    neon_edge = (79 / 255, 142 / 255, 247 / 255, 0.85)
-    fill = (79 / 255, 142 / 255, 247 / 255, 0.22)
+    neon_edge = (79 / 255, 142 / 255, 247 / 255, 0.92)
+    fill = (79 / 255, 142 / 255, 247 / 255, 0.24)
 
     bars = ax.barh(counts.index, counts.values, color=fill)
     for b in bars:
         b.set_edgecolor(neon_edge)
-        b.set_linewidth(1.4)
+        b.set_linewidth(1.6)
 
     ax.set_xlabel("Quantidade")
     ax.set_ylabel("")
@@ -381,13 +360,15 @@ def kpi_row(df: pd.DataFrame):
     c4.metric("Maior partido", f"{top_partido}", delta=f"{_fmt_int(top_qtd)} deputados" if top_partido != "-" else None)
 
 
-def download_csv_button(df: pd.DataFrame, filename: str, label: str):
+def download_csv_button(df: pd.DataFrame, filename: str, label: str, key: str):
+    # ✅ key único por botão (corrige StreamlitDuplicateElementId)
     st.download_button(
         label=label,
         data=_to_csv_bytes(df),
         file_name=filename,
         mime="text/csv",
         use_container_width=True,
+        key=key,
     )
 
 
@@ -429,12 +410,6 @@ def render_table(df: pd.DataFrame, percent_col: str | None = None):
 
 
 def render_highlights_top5(df: pd.DataFrame):
-    """
-    Destaques (Top 5) em cards:
-    - sem gráfico (menos "ruído")
-    - visual futurista com bordas arredondadas
-    - mostra contagem e % na base filtrada atual
-    """
     total = len(df)
     vc = df["siglaPartido"].value_counts().head(5)
 
@@ -442,11 +417,10 @@ def render_highlights_top5(df: pd.DataFrame):
         st.info("Sem dados para exibir destaques.")
         return
 
-    # Monta HTML dos cards (mais controle visual)
-    cards = []
+    cards_html = []
     for i, (sigla, qtd) in enumerate(vc.items(), start=1):
         pct = (qtd / total) * 100 if total else 0
-        cards.append(
+        cards_html.append(
             f"""
             <div class="hi-card">
               <div class="hi-top">
@@ -461,7 +435,8 @@ def render_highlights_top5(df: pd.DataFrame):
             """
         )
 
-    st.markdown(f'<div class="hi-wrap">{"".join(cards)}</div>', unsafe_allow_html=True)
+    # ✅ garante HTML renderizado (não aparece como texto)
+    st.markdown(f'<div class="hi-wrap">{"".join(cards_html)}</div>', unsafe_allow_html=True)
 
 
 # ----------------------------
@@ -473,21 +448,13 @@ def run_smoke_tests(df_base: pd.DataFrame, df_filtered: pd.DataFrame) -> list[di
     def add(name: str, ok: bool, detail: str = ""):
         results.append({"name": name, "ok": ok, "detail": detail})
 
-    # 1) Dataset sanity
     required_cols = {"id", "nome", "siglaPartido", "siglaUf", "uri", "urlFoto"}
     missing = required_cols - set(df_base.columns)
-    add(
-        "Colunas essenciais presentes",
-        ok=len(missing) == 0,
-        detail="" if len(missing) == 0 else f"Faltando: {sorted(list(missing))}",
-    )
-
+    add("Colunas essenciais presentes", ok=len(missing) == 0, detail="" if not missing else f"Faltando: {sorted(list(missing))}")
     add("Base não vazia", ok=len(df_base) > 0, detail=f"Linhas: {len(df_base)}")
 
-    # 2) Filtering sanity
     add("Filtro não cria linhas novas", ok=len(df_filtered) <= len(df_base), detail=f"{len(df_filtered)} <= {len(df_base)}")
 
-    # 3) Charts creation
     try:
         f1 = chart_partidos_bar(df_filtered if len(df_filtered) else df_base)
         add("Gráfico Partidos (bar) gera Figure", ok=isinstance(f1, Figure))
@@ -500,7 +467,6 @@ def run_smoke_tests(df_base: pd.DataFrame, df_filtered: pd.DataFrame) -> list[di
     except Exception as e:
         add("Gráfico UFs (bar) gera Figure", ok=False, detail=str(e))
 
-    # 4) Tables
     try:
         t1 = counts_table(df_base["siglaPartido"], "siglaPartido")
         add("Tabela contagem partidos OK", ok=("siglaPartido" in t1.columns and "qtdDeputados" in t1.columns and len(t1) > 0))
@@ -513,11 +479,10 @@ def run_smoke_tests(df_base: pd.DataFrame, df_filtered: pd.DataFrame) -> list[di
     except Exception as e:
         add("Tabela contagem UFs OK", ok=False, detail=str(e))
 
-    # 5) CSV difference (this checks your issue)
     try:
         b_filtered = _to_csv_bytes(df_filtered)
         b_full = _to_csv_bytes(df_base)
-        different = b_filtered != b_full  # if filters applied, should differ; if no filters, can be equal
+        different = b_filtered != b_full
         add(
             "CSV 'com filtros' difere da base completa (quando filtros ativos)",
             ok=(different or len(df_filtered) == len(df_base)),
@@ -629,7 +594,7 @@ with tabs[0]:
         st.markdown("### Deputados por UF")
         st.pyplot(chart_estados_bar(df_f), clear_figure=True)
 
-    # Advanced analysis (Option A): Destaques + Exportação
+    # Advanced analysis: Destaques + Exportação
     with st.expander("Análises avançadas", expanded=False):
         colA, colB = st.columns([1.15, 1.35], gap="small")
 
@@ -641,19 +606,39 @@ with tabs[0]:
         with colB:
             st.markdown("### Exportação")
             st.caption("Baixe os dados considerando os filtros atuais (não é a base completa).")
-            download_csv_button(df_f, "deputados_filtrados.csv", "Baixar CSV (com filtros)")
+            download_csv_button(
+                df_f,
+                "deputados_filtrados.csv",
+                "Baixar CSV (com filtros)",
+                key="dl_filtered_expander",
+            )
 
             st.divider()
             st.caption("Baixe a base completa (sem filtros).")
-            download_csv_button(df, "deputados_base_completa.csv", "Baixar CSV (base completa)")
+            download_csv_button(
+                df,
+                "deputados_base_completa.csv",
+                "Baixar CSV (base completa)",
+                key="dl_full_expander",
+            )
 
     st.divider()
-    # Atalhos (fora do expander) — agora explícitos e diferentes
+
     cA, cB = st.columns(2, gap="small")
     with cA:
-        download_csv_button(df_f, "deputados_filtrados.csv", "Baixar CSV (com filtros)")
+        download_csv_button(
+            df_f,
+            "deputados_filtrados.csv",
+            "Baixar CSV (com filtros)",
+            key="dl_filtered_main",
+        )
     with cB:
-        download_csv_button(df, "deputados_base_completa.csv", "Baixar CSV (base completa)")
+        download_csv_button(
+            df,
+            "deputados_base_completa.csv",
+            "Baixar CSV (base completa)",
+            key="dl_full_main",
+        )
 
 
 # --- Partidos ---
@@ -663,7 +648,12 @@ with tabs[1]:
     render_table(cont_partidos, percent_col="qtdDeputados")
 
     st.divider()
-    download_csv_button(cont_partidos, "contagem_partidos.csv", "Baixar CSV (ranking partidos)")
+    download_csv_button(
+        cont_partidos,
+        "contagem_partidos.csv",
+        "Baixar CSV (ranking partidos)",
+        key="dl_rank_partidos",
+    )
 
 
 # --- Estados ---
@@ -673,7 +663,12 @@ with tabs[2]:
     render_table(cont_ufs, percent_col="qtdDeputados")
 
     st.divider()
-    download_csv_button(cont_ufs, "contagem_estados.csv", "Baixar CSV (ranking UFs)")
+    download_csv_button(
+        cont_ufs,
+        "contagem_estados.csv",
+        "Baixar CSV (ranking UFs)",
+        key="dl_rank_ufs",
+    )
 
 
 # --- Deputados ---
@@ -701,20 +696,22 @@ with tabs[3]:
         deputy_details_card(row)
 
     st.divider()
-    download_csv_button(df_view, "deputados_explorados.csv", "Baixar CSV (resultado atual)")
+    download_csv_button(
+        df_view,
+        "deputados_explorados.csv",
+        "Baixar CSV (resultado atual)",
+        key="dl_deputados_explorados",
+    )
 
 
 # --- Testes automatizados (smoke tests) ---
 with tabs[4]:
     st.markdown("### Testes automatizados (smoke tests)")
     st.caption(
-        "Essa aba valida automaticamente as principais funcionalidades: "
-        "carregamento, filtros, gráficos, tabelas e exportação."
+        "Valida automaticamente: carregamento, filtros, gráficos, tabelas e exportação."
     )
 
-    run = st.button("Rodar testes agora", use_container_width=True)
-
-    if run:
+    if st.button("Rodar testes agora", use_container_width=True):
         results = run_smoke_tests(df_base=df, df_filtered=df_f)
 
         ok_count = sum(1 for r in results if r["ok"])
@@ -726,15 +723,12 @@ with tabs[4]:
             st.warning(f"⚠️ {ok_count}/{total} testes passaram. Veja detalhes abaixo.")
 
         for r in results:
-            if r["ok"]:
-                st.success(r["name"])
-            else:
-                st.error(r["name"])
+            (st.success if r["ok"] else st.error)(r["name"])
             if r["detail"]:
                 st.caption(r["detail"])
 
         st.divider()
-        st.caption("Dica: para testes de CI de verdade, o ideal é criar arquivos de teste com pytest no repositório.")
+        st.caption("Para CI real (GitHub Actions + pytest), eu também posso te gerar os arquivos do repositório.")
 
 
 # --- Sobre ---
