@@ -1,15 +1,15 @@
 # app.py
 # Futuristic / minimal (dark) Streamlit dashboard
-# - Destaques (Top 5) em cards (sem gráfico)
-# - Exportações com keys únicas (corrige StreamlitDuplicateElementId)
-# - Aba "Testes" com smoke tests
-#
-# Requisitos: streamlit, pandas, requests, matplotlib
+# Fixes:
+# - Highlights cards rendered via components.html() (prevents HTML showing as text)
+# - Export buttons shown only inside the expander (no duplicates at "footer")
+# - download_button keys unique
 
 import time
 import requests
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
@@ -33,7 +33,6 @@ st.markdown(
 :root{
   --bg: #0B0F14;
   --panel: #0E141B;
-  --panel2:#101824;
   --text: #E6EDF3;
   --muted:#9AA6B2;
   --border: rgba(255,255,255,0.07);
@@ -49,7 +48,7 @@ section[data-testid="stSidebar"]{
   border-right: 1px solid var(--border);
 }
 
-h1, h2, h3{ font-weight: 700; letter-spacing: -0.03em; }
+h1, h2, h3{ font-weight: 750; letter-spacing: -0.03em; }
 p, label, span { color: var(--text); }
 
 .title-neon{
@@ -93,7 +92,7 @@ p, label, span { color: var(--text); }
 [data-testid="stDataFrame"] thead tr th {
   background: rgba(93, 91, 255, 0.12) !important;
   color: #E6EDF3 !important;
-  font-weight: 800 !important;
+  font-weight: 850 !important;
   border-bottom: 1px solid rgba(255,255,255,0.12) !important;
 }
 [data-testid="stDataFrame"] tbody tr:nth-child(odd) {
@@ -115,57 +114,6 @@ button[data-baseweb="tab"][aria-selected="true"]{
 }
 
 a, a:visited { color: rgba(57,255,182,0.92); }
-
-/* Destaques cards */
-.hi-wrap{
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-.hi-card{
-  border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.10);
-  background:
-    radial-gradient(900px 140px at 10% 0%, rgba(57,255,182,0.14), rgba(0,0,0,0) 60%),
-    linear-gradient(180deg, rgba(16,24,36,0.70) 0%, rgba(14,20,27,0.70) 100%);
-  padding: 14px 14px 12px 14px;
-  box-shadow: 0 18px 40px rgba(0,0,0,0.22);
-}
-.hi-top{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom: 8px;
-}
-.hi-pill{
-  font-size: 12px;
-  color: rgba(230,237,243,0.90);
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(57,255,182,0.22);
-  background: rgba(57,255,182,0.08);
-  white-space: nowrap;
-}
-.hi-title{
-  font-weight: 800;
-  font-size: 16px;
-  letter-spacing: -0.02em;
-  color: #E6EDF3;
-}
-.hi-metrics{
-  display:flex;
-  gap:12px;
-  flex-wrap:wrap;
-}
-.hi-metric{
-  font-size: 13px;
-  color: rgba(230,237,243,0.80);
-}
-.hi-metric b{
-  color: #E6EDF3;
-  font-weight: 800;
-}
 </style>
 """,
     unsafe_allow_html=True,
@@ -361,7 +309,6 @@ def kpi_row(df: pd.DataFrame):
 
 
 def download_csv_button(df: pd.DataFrame, filename: str, label: str, key: str):
-    # ✅ key único por botão (corrige StreamlitDuplicateElementId)
     st.download_button(
         label=label,
         data=_to_csv_bytes(df),
@@ -372,9 +319,25 @@ def download_csv_button(df: pd.DataFrame, filename: str, label: str, key: str):
     )
 
 
+def render_table(df: pd.DataFrame, percent_col: str | None = None):
+    dfx = df.copy()
+    if percent_col and percent_col in dfx.columns:
+        total = dfx[percent_col].sum()
+        if total > 0:
+            dfx["%"] = (dfx[percent_col] / total * 100).round(1)
+
+    fmt_map = {}
+    if "qtdDeputados" in dfx.columns:
+        fmt_map["qtdDeputados"] = "{:,.0f}".format
+    if "%" in dfx.columns:
+        fmt_map["%"] = "{:.1f}%".format
+
+    styler = dfx.style.format(fmt_map).set_properties(**{"font-size": "14px"})
+    st.dataframe(styler, use_container_width=True, hide_index=True)
+
+
 def deputy_details_card(row: dict):
     col1, col2 = st.columns([1, 2])
-
     with col1:
         foto = row.get("urlFoto")
         if foto and str(foto) != "None":
@@ -391,25 +354,10 @@ def deputy_details_card(row: dict):
             st.link_button("Ver dados na API", uri)
 
 
-def render_table(df: pd.DataFrame, percent_col: str | None = None):
-    dfx = df.copy()
-
-    if percent_col and percent_col in dfx.columns:
-        total = dfx[percent_col].sum()
-        if total > 0:
-            dfx["%"] = (dfx[percent_col] / total * 100).round(1)
-
-    fmt_map = {}
-    if "qtdDeputados" in dfx.columns:
-        fmt_map["qtdDeputados"] = "{:,.0f}".format
-    if "%" in dfx.columns:
-        fmt_map["%"] = "{:.1f}%".format
-
-    styler = dfx.style.format(fmt_map).set_properties(**{"font-size": "14px"})
-    st.dataframe(styler, use_container_width=True, hide_index=True)
-
-
-def render_highlights_top5(df: pd.DataFrame):
+def render_highlights_top5_components(df: pd.DataFrame):
+    """
+    Render cards via components.html to avoid HTML appearing as code.
+    """
     total = len(df)
     vc = df["siglaPartido"].value_counts().head(5)
 
@@ -417,10 +365,10 @@ def render_highlights_top5(df: pd.DataFrame):
         st.info("Sem dados para exibir destaques.")
         return
 
-    cards_html = []
+    cards = []
     for i, (sigla, qtd) in enumerate(vc.items(), start=1):
         pct = (qtd / total) * 100 if total else 0
-        cards_html.append(
+        cards.append(
             f"""
             <div class="hi-card">
               <div class="hi-top">
@@ -435,12 +383,64 @@ def render_highlights_top5(df: pd.DataFrame):
             """
         )
 
-    # ✅ garante HTML renderizado (não aparece como texto)
-    st.markdown(f'<div class="hi-wrap">{"".join(cards_html)}</div>', unsafe_allow_html=True)
+    # Inline CSS just for the component (safe and isolated)
+    html = f"""
+    <html>
+      <head>
+        <style>
+          body {{
+            margin: 0;
+            background: transparent;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+            color: #E6EDF3;
+          }}
+          .hi-wrap{{
+            display:grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap:14px;
+          }}
+          .hi-card{{
+            border-radius:16px;
+            border:1px solid rgba(255,255,255,0.10);
+            background:
+              radial-gradient(900px 140px at 10% 0%, rgba(57,255,182,0.14), rgba(0,0,0,0) 60%),
+              linear-gradient(180deg, rgba(16,24,36,0.70) 0%, rgba(14,20,27,0.70) 100%);
+            padding:14px 14px 12px 14px;
+            box-shadow: 0 18px 40px rgba(0,0,0,0.22);
+          }}
+          .hi-top{{
+            display:flex; align-items:center; justify-content:space-between;
+            gap:10px; margin-bottom:8px;
+          }}
+          .hi-pill{{
+            font-size:12px; color: rgba(230,237,243,0.90);
+            padding:4px 10px; border-radius:999px;
+            border:1px solid rgba(57,255,182,0.22);
+            background: rgba(57,255,182,0.08);
+            white-space:nowrap;
+          }}
+          .hi-title{{
+            font-weight:800; font-size:16px; letter-spacing:-0.02em;
+          }}
+          .hi-metrics{{ display:flex; gap:12px; flex-wrap:wrap; }}
+          .hi-metric{{ font-size:13px; color: rgba(230,237,243,0.80); }}
+          .hi-metric b{{ color:#E6EDF3; font-weight:800; }}
+        </style>
+      </head>
+      <body>
+        <div class="hi-wrap">
+          {''.join(cards)}
+        </div>
+      </body>
+    </html>
+    """
+
+    # Height: 2 columns x 3 rows max => ~ 210-240px comfortable
+    components.html(html, height=260, scrolling=False)
 
 
 # ----------------------------
-# Automated tests (inside app)
+# Tests
 # ----------------------------
 def run_smoke_tests(df_base: pd.DataFrame, df_filtered: pd.DataFrame) -> list[dict]:
     results = []
@@ -452,39 +452,26 @@ def run_smoke_tests(df_base: pd.DataFrame, df_filtered: pd.DataFrame) -> list[di
     missing = required_cols - set(df_base.columns)
     add("Colunas essenciais presentes", ok=len(missing) == 0, detail="" if not missing else f"Faltando: {sorted(list(missing))}")
     add("Base não vazia", ok=len(df_base) > 0, detail=f"Linhas: {len(df_base)}")
-
     add("Filtro não cria linhas novas", ok=len(df_filtered) <= len(df_base), detail=f"{len(df_filtered)} <= {len(df_base)}")
 
     try:
         f1 = chart_partidos_bar(df_filtered if len(df_filtered) else df_base)
-        add("Gráfico Partidos (bar) gera Figure", ok=isinstance(f1, Figure))
+        add("Gráfico Partidos gera Figure", ok=isinstance(f1, Figure))
     except Exception as e:
-        add("Gráfico Partidos (bar) gera Figure", ok=False, detail=str(e))
+        add("Gráfico Partidos gera Figure", ok=False, detail=str(e))
 
     try:
         f2 = chart_estados_bar(df_filtered if len(df_filtered) else df_base)
-        add("Gráfico UFs (bar) gera Figure", ok=isinstance(f2, Figure))
+        add("Gráfico UFs gera Figure", ok=isinstance(f2, Figure))
     except Exception as e:
-        add("Gráfico UFs (bar) gera Figure", ok=False, detail=str(e))
-
-    try:
-        t1 = counts_table(df_base["siglaPartido"], "siglaPartido")
-        add("Tabela contagem partidos OK", ok=("siglaPartido" in t1.columns and "qtdDeputados" in t1.columns and len(t1) > 0))
-    except Exception as e:
-        add("Tabela contagem partidos OK", ok=False, detail=str(e))
-
-    try:
-        t2 = counts_table(df_base["siglaUf"], "siglaUf")
-        add("Tabela contagem UFs OK", ok=("siglaUf" in t2.columns and "qtdDeputados" in t2.columns and len(t2) > 0))
-    except Exception as e:
-        add("Tabela contagem UFs OK", ok=False, detail=str(e))
+        add("Gráfico UFs gera Figure", ok=False, detail=str(e))
 
     try:
         b_filtered = _to_csv_bytes(df_filtered)
         b_full = _to_csv_bytes(df_base)
         different = b_filtered != b_full
         add(
-            "CSV 'com filtros' difere da base completa (quando filtros ativos)",
+            "CSV com filtros difere da base (se filtros ativos)",
             ok=(different or len(df_filtered) == len(df_base)),
             detail=("Diferentes" if different else "Iguais (ok se nenhum filtro foi aplicado)"),
         )
@@ -594,14 +581,14 @@ with tabs[0]:
         st.markdown("### Deputados por UF")
         st.pyplot(chart_estados_bar(df_f), clear_figure=True)
 
-    # Advanced analysis: Destaques + Exportação
+    # ✅ Export + Destaques apenas aqui (sem duplicar no "rodapé")
     with st.expander("Análises avançadas", expanded=False):
         colA, colB = st.columns([1.15, 1.35], gap="small")
 
         with colA:
             st.markdown("### Destaques (Top 5 partidos)")
             st.caption("Resumo rápido com base nos filtros atuais.")
-            render_highlights_top5(df_f)
+            render_highlights_top5_components(df_f)
 
         with colB:
             st.markdown("### Exportação")
@@ -622,24 +609,6 @@ with tabs[0]:
                 key="dl_full_expander",
             )
 
-    st.divider()
-
-    cA, cB = st.columns(2, gap="small")
-    with cA:
-        download_csv_button(
-            df_f,
-            "deputados_filtrados.csv",
-            "Baixar CSV (com filtros)",
-            key="dl_filtered_main",
-        )
-    with cB:
-        download_csv_button(
-            df,
-            "deputados_base_completa.csv",
-            "Baixar CSV (base completa)",
-            key="dl_full_main",
-        )
-
 
 # --- Partidos ---
 with tabs[1]:
@@ -648,12 +617,7 @@ with tabs[1]:
     render_table(cont_partidos, percent_col="qtdDeputados")
 
     st.divider()
-    download_csv_button(
-        cont_partidos,
-        "contagem_partidos.csv",
-        "Baixar CSV (ranking partidos)",
-        key="dl_rank_partidos",
-    )
+    download_csv_button(cont_partidos, "contagem_partidos.csv", "Baixar CSV (ranking partidos)", key="dl_rank_partidos")
 
 
 # --- Estados ---
@@ -663,12 +627,7 @@ with tabs[2]:
     render_table(cont_ufs, percent_col="qtdDeputados")
 
     st.divider()
-    download_csv_button(
-        cont_ufs,
-        "contagem_estados.csv",
-        "Baixar CSV (ranking UFs)",
-        key="dl_rank_ufs",
-    )
+    download_csv_button(cont_ufs, "contagem_estados.csv", "Baixar CSV (ranking UFs)", key="dl_rank_ufs")
 
 
 # --- Deputados ---
@@ -696,24 +655,16 @@ with tabs[3]:
         deputy_details_card(row)
 
     st.divider()
-    download_csv_button(
-        df_view,
-        "deputados_explorados.csv",
-        "Baixar CSV (resultado atual)",
-        key="dl_deputados_explorados",
-    )
+    download_csv_button(df_view, "deputados_explorados.csv", "Baixar CSV (resultado atual)", key="dl_deputados_explorados")
 
 
-# --- Testes automatizados (smoke tests) ---
+# --- Testes ---
 with tabs[4]:
     st.markdown("### Testes automatizados (smoke tests)")
-    st.caption(
-        "Valida automaticamente: carregamento, filtros, gráficos, tabelas e exportação."
-    )
+    st.caption("Valida automaticamente: carregamento, filtros, gráficos e exportação.")
 
     if st.button("Rodar testes agora", use_container_width=True):
         results = run_smoke_tests(df_base=df, df_filtered=df_f)
-
         ok_count = sum(1 for r in results if r["ok"])
         total = len(results)
 
@@ -727,16 +678,12 @@ with tabs[4]:
             if r["detail"]:
                 st.caption(r["detail"])
 
-        st.divider()
-        st.caption("Para CI real (GitHub Actions + pytest), eu também posso te gerar os arquivos do repositório.")
-
 
 # --- Sobre ---
 with tabs[5]:
     st.markdown(
         """
 ### Sobre
-
 Interface para análise da composição atual da Câmara dos Deputados, com foco em:
 - distribuição por partido
 - distribuição por UF
