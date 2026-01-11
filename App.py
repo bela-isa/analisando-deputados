@@ -554,7 +554,12 @@ def chart_top5_pizza(df: pd.DataFrame):
         t.set_fontweight("700")
         t.set_fontsize(11)
 
-    ax.set_title("Participação do Top 5 partidos", pad=20, fontweight='bold')
+    ax.set_title(
+    "Participação do Top 5 partidos",
+    pad=20,
+    fontweight="bold",
+    color="white"   # ou "#FFFFFF"
+)
     fig.tight_layout()
     return fig
 
