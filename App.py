@@ -3,6 +3,8 @@
 # + higher-contrast charts
 # + smaller donut chart
 # + elegant tables (zebra + hover + header polish + % column)
+# + "Ver dados na API" button label
+# + Advanced analysis layout Option A (closer columns, small gap)
 #
 # Requisitos: streamlit, pandas, requests, matplotlib
 
@@ -227,9 +229,9 @@ def counts_table(series: pd.Series, col_name: str) -> pd.DataFrame:
 # ----------------------------
 def _style_dark_axes(ax):
     fg = "#E6EDF3"
-    muted = "#B6C2CF"          # brighter for contrast
+    muted = "#B6C2CF"
     panel = "#0E141B"
-    grid = (1, 1, 1, 0.10)     # a bit more visible
+    grid = (1, 1, 1, 0.10)
 
     ax.set_facecolor(panel)
     ax.tick_params(colors=muted, labelsize=10)
@@ -251,8 +253,8 @@ def chart_partidos_bar(df: pd.DataFrame):
     fig.patch.set_facecolor("#0B0F14")
     _style_dark_axes(ax)
 
-    neon_edge = (57/255, 1.0, 182/255, 0.85)
-    fill = (57/255, 1.0, 182/255, 0.22)
+    neon_edge = (57 / 255, 1.0, 182 / 255, 0.85)
+    fill = (57 / 255, 1.0, 182 / 255, 0.22)
 
     bars = ax.barh(counts.index, counts.values, color=fill)
     for b in bars:
@@ -279,8 +281,8 @@ def chart_estados_bar(df: pd.DataFrame):
     fig.patch.set_facecolor("#0B0F14")
     _style_dark_axes(ax)
 
-    neon_edge = (79/255, 142/255, 247/255, 0.85)
-    fill = (79/255, 142/255, 247/255, 0.22)
+    neon_edge = (79 / 255, 142 / 255, 247 / 255, 0.85)
+    fill = (79 / 255, 142 / 255, 247 / 255, 0.22)
 
     bars = ax.barh(counts.index, counts.values, color=fill)
     for b in bars:
@@ -303,7 +305,7 @@ def chart_estados_bar(df: pd.DataFrame):
 def chart_top5_pizza(df: pd.DataFrame):
     counts = df["siglaPartido"].value_counts().head(5)
 
-    fig, ax = plt.subplots(figsize=(5.8, 4.2))  # smaller footprint
+    fig, ax = plt.subplots(figsize=(5.8, 4.2))
     fig.patch.set_facecolor("#0B0F14")
     ax.set_facecolor("#0E141B")
 
@@ -317,12 +319,11 @@ def chart_top5_pizza(df: pd.DataFrame):
         textprops={"color": "#E6EDF3", "fontsize": 10},
         wedgeprops={
             "linewidth": 1.4,
-            "edgecolor": (93/255, 91/255, 1.0, 0.75),
+            "edgecolor": (93 / 255, 91 / 255, 1.0, 0.75),
             "alpha": 0.28,
         },
     )
 
-    # donut hole
     centre_circle = plt.Circle((0, 0), 0.55, fc="#0E141B")
     ax.add_artist(centre_circle)
 
@@ -386,7 +387,8 @@ def deputy_details_card(row: dict):
         st.write(f"UF: **{row.get('siglaUf', '-')}**")
         uri = row.get("uri")
         if uri and str(uri) != "None":
-            st.link_button("Abrir referência", uri)
+            # Renamed for clarity
+            st.link_button("Ver dados na API", uri)
 
 
 def render_table(df: pd.DataFrame, percent_col: str | None = None):
@@ -400,18 +402,13 @@ def render_table(df: pd.DataFrame, percent_col: str | None = None):
         if total > 0:
             dfx["%"] = (dfx[percent_col] / total * 100).round(1)
 
-    # Format numbers
     fmt_map = {}
     if "qtdDeputados" in dfx.columns:
         fmt_map["qtdDeputados"] = "{:,.0f}".format
     if "%" in dfx.columns:
         fmt_map["%"] = "{:.1f}%".format
 
-    styler = (
-        dfx.style
-        .format(fmt_map)
-        .set_properties(**{"font-size": "14px"})
-    )
+    styler = dfx.style.format(fmt_map).set_properties(**{"font-size": "14px"})
 
     st.dataframe(styler, use_container_width=True, hide_index=True)
 
@@ -424,7 +421,7 @@ st.caption("Dashboard interativa para explorar a composição atual da Câmara: 
 
 
 # ----------------------------
-# Sidebar (minimal)
+# Sidebar
 # ----------------------------
 with st.sidebar:
     st.markdown("## Controles")
@@ -516,9 +513,9 @@ with tabs[0]:
         st.markdown("### Deputados por UF")
         st.pyplot(chart_estados_bar(df_f), clear_figure=True)
 
-    # "secret but robust" section
+    # Advanced analysis - Option A (closer, small gap)
     with st.expander("Análises avançadas", expanded=False):
-        colA, colB = st.columns([1, 1.6], gap="large")
+        colA, colB = st.columns([1.15, 1.35], gap="small")
         with colA:
             st.pyplot(chart_top5_pizza(df_f), clear_figure=True)
         with colB:
@@ -559,7 +556,6 @@ with tabs[3]:
     if search.strip():
         df_view = df_view[df_view["nome"].str.contains(search, case=False, na=False)]
 
-    # Show fewer columns by default (cleaner), but keep robust
     preferred_cols = ["nome", "siglaPartido", "siglaUf"]
     cols = [c for c in preferred_cols if c in df_view.columns]
     table_df = df_view[cols] if cols else df_view
