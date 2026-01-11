@@ -1,65 +1,136 @@
-# Análise de Dados dos Deputados Federais
+# 📊 Análises de Dados — Deputados Federais
 
-Este documento explica todas as análises e visualizações geradas pelo script de análise de dados dos deputados federais.
+Este documento descreve as análises realizadas a partir dos dados dos Deputados Federais brasileiros, bem como a forma correta de interpretar os resultados exibidos no dashboard interativo desenvolvido com **Streamlit**.
 
-## Arquivos CSV Gerados
+As análises utilizam dados públicos obtidos por meio da **API de Dados Abertos da Câmara dos Deputados** e refletem a composição atual da Câmara.
 
-### Dados Básicos
-- `deputados.csv`: Lista completa dos deputados com suas informações básicas
-- `contagem_partidos.csv`: Quantidade de deputados por partido
-- `contagem_estados.csv`: Quantidade de deputados por estado
+---
 
-## Visualizações Geradas
+## 📁 Bases de Dados Utilizadas
 
-### 1. Distribuição por Partido (Barras)
-- **Arquivo**: `deputados_por_partido.png`
-- **Descrição**: Gráfico de barras mostrando a quantidade de deputados em cada partido
-- **Interpretação**: Permite visualizar quais partidos têm mais representantes na Câmara
-- **Observações**: 
-  - As barras são ordenadas por quantidade, do maior para o menor
-  - Cada barra representa um partido diferente
-  - A altura da barra indica o número de deputados
+Os dados são carregados diretamente da API oficial e tratados em memória para visualização e exportação.
 
-### 2. Maiores Partidos (Pizza)
-- **Arquivo**: `maiores_partidos_pizza.png`
-- **Descrição**: Gráfico de pizza mostrando os 5 maiores partidos e agrupando os demais como "Outros"
-- **Interpretação**: Facilita a visualização da concentração de poder entre os principais partidos
-- **Observações**:
-  - Os 5 maiores partidos são mostrados individualmente
-  - Todos os outros partidos são agrupados na fatia "Outros"
-  - As porcentagens são mostradas em cada fatia
+### Estrutura principal da base
+Cada deputado contém, entre outras, as seguintes informações:
+- Nome parlamentar
+- Partido (sigla)
+- Unidade Federativa (UF)
+- Foto oficial
+- Identificador único (ID)
+- Link para o registro oficial na API
 
-### 3. Distribuição por Estado (Barras)
-- **Arquivo**: `deputados_por_estado.png`
-- **Descrição**: Gráfico de barras mostrando a quantidade de deputados por estado
-- **Interpretação**: Permite visualizar a representatividade de cada estado na Câmara
-- **Observações**:
-  - As barras são ordenadas por quantidade, do maior para o menor
-  - Cada barra representa um estado
-  - A altura da barra indica o número de deputados
+---
 
-## Como Interpretar os Resultados
+## 📤 Exportações Disponíveis
 
-1. **Representatividade por Partido**:
-   - Use o gráfico de barras para ver a quantidade exata de deputados por partido
-   - Use o gráfico de pizza para entender a proporção dos maiores partidos
-   - Observe se há concentração de poder em poucos partidos ou distribuição mais equilibrada
+O dashboard permite exportar dados em dois contextos distintos:
 
-2. **Representatividade por Estado**:
-   - Compare a quantidade de deputados com a população de cada estado
-   - Observe quais estados têm mais representantes
-   - Note que estados mais populosos tendem a ter mais deputados
+### 1️⃣ CSV com filtros aplicados
+- Contém **apenas os deputados visíveis após a aplicação dos filtros**
+- Ideal para análises direcionadas (por partido, estado, etc.)
+- Reflete exatamente o que está sendo exibido na interface
 
-## Observações Importantes
+### 2️⃣ CSV da base completa (sem filtros)
+- Contém **todos os deputados carregados da API**
+- Independe de filtros ativos
+- Útil como base bruta para análises externas
 
-1. **Limitações dos Dados**:
-   - Os dados são limitados às informações básicas dos deputados
-   - Não foi possível obter dados de proposições através da API
+> ⚠️ Importante: os dois arquivos **não são iguais** e atendem a objetivos analíticos diferentes.
 
-2. **Atualizações**:
-   - Os dados refletem a composição atual da Câmara dos Deputados
-   - Para dados mais recentes, execute o script novamente
+---
 
-3. **Interpretação**:
-   - Os gráficos são complementares e devem ser analisados em conjunto
-   - A representatividade dos estados é definida por lei e leva em conta a população 
+## 📈 Análises e Visualizações
+
+### 1. Distribuição de Deputados por Partido
+- **Formato**: Gráfico de barras horizontais
+- **Objetivo**: Mostrar a quantidade de deputados por partido
+- **Interpretação**:
+  - Barras maiores indicam partidos com maior representação
+  - Ordenação decrescente facilita a comparação direta
+- **Uso prático**:
+  - Identificar partidos majoritários
+  - Avaliar concentração ou fragmentação partidária
+
+---
+
+### 2. Distribuição de Deputados por Unidade Federativa (UF)
+- **Formato**: Gráfico de barras horizontais
+- **Objetivo**: Exibir a quantidade de deputados por estado
+- **Interpretação**:
+  - Estados com maior população tendem a ter mais representantes
+  - A visualização facilita comparações rápidas entre UFs
+- **Observação**:
+  - A distribuição segue critérios legais definidos pela Constituição
+
+---
+
+### 3. Destaques — Top 5 Partidos
+- **Formato**: Cards de destaque (quadrados com bordas arredondadas)
+- **Conteúdo exibido**:
+  - Sigla do partido
+  - Quantidade de deputados
+  - Percentual relativo à base atual (com filtros)
+  - Ranking (Top 1, Top 2, etc.)
+
+#### Por que usar cards em vez de gráfico?
+- Evita redundância visual
+- Facilita leitura rápida
+- Mantém consistência com o restante do dashboard
+- Reduz ruído visual em telas menores
+
+Esses destaques funcionam como um **resumo executivo** da composição partidária.
+
+---
+
+## 🧪 Testes Automatizados (Sanidade)
+
+O projeto inclui uma aba dedicada a **testes automatizados**, com foco em verificação funcional do dashboard.
+
+### Testes realizados:
+- Carregamento correto da base de dados
+- Estrutura mínima esperada do DataFrame
+- Funcionamento dos filtros (partido e UF)
+- Coerência entre dados filtrados e exportações
+- Geração correta das visualizações
+
+Esses testes ajudam a garantir:
+- Estabilidade do app
+- Confiança antes de deploys
+- Facilidade de manutenção e refatoração
+
+---
+
+## 🧠 Como Interpretar os Resultados
+
+### Representatividade por Partido
+- Utilize o gráfico de barras para valores absolutos
+- Utilize os cards de destaque para leitura rápida
+- Compare percentuais considerando os filtros ativos
+
+### Representatividade por Estado
+- Compare estados entre si
+- Lembre-se que a distribuição é legalmente definida
+- Evite comparações diretas sem considerar população
+
+---
+
+## ⚠️ Observações Importantes
+
+1. **Limitações dos dados**
+   - Apenas dados públicos básicos estão disponíveis
+   - Não inclui votações, proposições ou histórico legislativo
+
+2. **Atualização dos dados**
+   - Os dados refletem o estado atual da API
+   - Para atualizar, basta recarregar o app ou limpar o cache
+
+3. **Uso responsável**
+   - As análises são descritivas
+   - Não representam posicionamentos políticos ou juízos de valor
+
+---
+
+## 🌐 Fonte dos Dados
+
+API de Dados Abertos da Câmara dos Deputados  
+🔗 https://dadosabertos.camara.leg.br/swagger/api.html
