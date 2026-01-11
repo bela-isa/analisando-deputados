@@ -1,77 +1,189 @@
-# Análise de Dados: Deputados Federais
 
-Este projeto realiza uma análise dos dados dos deputados federais brasileiros utilizando a API de Dados Abertos da Câmara dos Deputados.
+# 📊 Análise de Dados — Deputados Federais (Brasil)
 
-## Funcionalidades
+Dashboard interativo para análise da composição atual da Câmara dos Deputados, desenvolvido em **Python + Streamlit**, utilizando a **API de Dados Abertos da Câmara dos Deputados**.
 
-O projeto analisa:
-- Distribuição de deputados por partido (gráfico de barras e pizza)
-- Distribuição de deputados por estado (gráfico de barras)
-- Análise dos 5 maiores partidos
+O projeto permite explorar, filtrar, visualizar e exportar dados de forma clara, moderna e responsiva, com foco em **análise institucional e transparência pública**.
 
-## Requisitos
+---
 
-- Python 3.8+
-- Bibliotecas Python listadas em `requirements.txt`
+## 🚀 Funcionalidades
 
-## Instalação
+### 🔎 Exploração de dados
+- Visualização da **distribuição de deputados por partido**
+- Visualização da **distribuição de deputados por UF**
+- Lista navegável de deputados com busca por nome
+- Visualização de detalhes individuais (foto, partido, UF, link oficial)
 
-1. Clone este repositório
-2. Crie um ambiente virtual:
+### 📌 Destaques inteligentes
+- **Top 5 partidos** exibidos em cards (resumo visual)
+- Quantidade de deputados por partido
+- Percentual relativo à base filtrada
+
+### 🎛️ Filtros dinâmicos
+- Filtro por **partido**
+- Filtro por **estado (UF)**
+- Ordenação configurável
+- Atualização automática das métricas, gráficos e exportações
+
+### 📤 Exportação de dados
+- **CSV com filtros aplicados**
+- **CSV da base completa (sem filtros)**
+- Exportações separadas e consistentes (sem duplicidade)
+
+### 🧪 Testes automatizados
+- Aba dedicada a **testes de sanidade (smoke tests)**
+- Verificação automática de:
+  - Carregamento de dados
+  - Estrutura da base
+  - Aplicação de filtros
+  - Geração de gráficos
+  - Coerência das exportações CSV
+
+---
+
+## 🖥️ Interface
+
+- Design **dark / futurista**
+- Detalhes visuais com **neon discreto**
+- Layout responsivo (desktop e mobile)
+- Componentes organizados por abas
+- Performance otimizada com cache configurável
+
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+- **Python 3.8+**
+- **Streamlit**
+- **Pandas**
+- **Matplotlib**
+- **Requests**
+- **API Dados Abertos da Câmara**
+
+---
+
+## 📦 Instalação (Local)
+
+### 1️⃣ Clone o repositório
+```bash
+git clone https://github.com/bela-isa/analisando-deputados.git
+cd analisando-deputados
+````
+
+### 2️⃣ Crie e ative um ambiente virtual
+
 ```bash
 python -m venv venv
-source venv/bin/activate  # Linux/Mac
+source venv/bin/activate   # Linux / Mac
 # ou
-.\venv\Scripts\activate  # Windows
+venv\Scripts\activate      # Windows
 ```
 
-3. Instale as dependências:
+### 3️⃣ Instale as dependências
+
 ```bash
 pip install -r requirements.txt
 ```
 
-## Uso
+---
 
-Execute o script principal:
+## ▶️ Execução
+
+### Rodar localmente
+
 ```bash
-python analise_deputados.py
+streamlit run app.py
 ```
 
-## Resultados
+O aplicativo será iniciado em:
 
-### Arquivos CSV
-- `resultados/deputados.csv`: Lista completa dos deputados
-- `resultados/contagem_partidos.csv`: Quantidade de deputados por partido
-- `resultados/contagem_estados.csv`: Quantidade de deputados por estado
+```
+http://localhost:8501
+```
 
-### Visualizações
-- `resultados/deputados_por_partido.png`: Distribuição de deputados por partido (barras)
-- `resultados/deputados_por_estado.png`: Distribuição de deputados por estado (barras)
-- `resultados/maiores_partidos_pizza.png`: Top 5 maiores partidos (pizza)
+---
 
-## Documentação
+## ☁️ Deploy (Streamlit Cloud)
 
-- `ANALISES.md`: Documentação detalhada das análises e visualizações geradas
-  - Explicação de cada arquivo gerado
-  - Guia de interpretação dos gráficos
-  - Observações importantes sobre os dados
+1. Suba o repositório no GitHub
+2. Acesse [https://streamlit.io/cloud](https://streamlit.io/cloud)
+3. Crie um novo app apontando para:
 
-## Fonte dos Dados
+   * **Arquivo principal:** `app.py`
+4. Defina o Python conforme o `requirements.txt`
+5. Deploy automático 🎉
 
-Os dados são obtidos através da API de Dados Abertos da Câmara dos Deputados:
-https://dadosabertos.camara.leg.br/swagger/api.html
+---
 
-## Limitações
+## 🧪 Testes Automatizados
 
-- Os dados são limitados às informações básicas dos deputados
-- A API de proposições não está disponível no momento
-- Os dados refletem apenas a composição atual da Câmara
+Na aba **"Testes"**, é possível rodar verificações automáticas que validam:
 
-## Contribuição
+* Integridade da base
+* Consistência dos filtros
+* Funcionamento dos gráficos
+* Diferença correta entre CSV filtrado e base completa
 
-Para contribuir com o projeto:
-1. Faça um fork do repositório
-2. Crie uma branch para sua feature (`git checkout -b feature/nova-analise`)
-3. Faça commit das mudanças (`git commit -am 'Adiciona nova análise'`)
-4. Faça push para a branch (`git push origin feature/nova-analise`)
-5. Abra um Pull Request 
+Esses testes ajudam a garantir estabilidade antes de deploys ou refatorações.
+
+---
+
+## 📁 Estrutura do Projeto
+
+```
+├── app.py                 # Aplicação Streamlit
+├── analise_deputados.py   # Script original de análise (offline)
+├── ANALISES.md            # Documentação técnica das análises
+├── requirements.txt       # Dependências do projeto
+└── README.md              # Documentação principal
+```
+
+---
+
+## 🌐 Fonte dos Dados
+
+Os dados são obtidos diretamente da API oficial:
+
+🔗 [https://dadosabertos.camara.leg.br/swagger/api.html](https://dadosabertos.camara.leg.br/swagger/api.html)
+
+* Os dados refletem a **composição atual** da Câmara
+* Atualização conforme disponibilidade da API
+
+---
+
+## ⚠️ Limitações Conhecidas
+
+* Informações limitadas aos dados públicos disponibilizados
+* Não inclui votações, proposições ou histórico legislativo
+* Dependência da disponibilidade da API externa
+
+---
+
+## 🤝 Contribuição
+
+Contribuições são bem-vindas!
+
+1. Faça um fork do projeto
+2. Crie uma branch para sua feature:
+
+```bash
+git checkout -b feature/nova-funcionalidade
+```
+
+3. Commit suas alterações:
+
+```bash
+git commit -m "Adiciona nova funcionalidade"
+```
+
+4. Push para sua branch:
+
+```bash
+git push origin feature/nova-funcionalidade
+```
+
+5. Abra um Pull Request 🚀
+
+---
+
