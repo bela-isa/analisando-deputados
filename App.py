@@ -896,4 +896,4 @@ API de Dados Abertos da Câmara dos Deputados
         - **Análises pontuais:** Use o botão "Atualizar" conforme necessário
         """)
     
-    st.success("✨ Dashboard desenvolvida com foco em performance e experiência do usuário!")
+    st.success("✨ Dashboard desenvolvida com foco compartilhar informações úteis!")
