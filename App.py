@@ -1,5 +1,9 @@
 # app.py
 # Futuristic / minimal (dark) Streamlit dashboard with subtle neon accents
+# + higher-contrast charts
+# + smaller donut chart
+# + elegant tables (zebra + hover + header polish + % column)
+#
 # Requisitos: streamlit, pandas, requests, matplotlib
 
 import time
@@ -19,7 +23,6 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-
 # ----------------------------
 # Futuristic minimal UI (CSS)
 # ----------------------------
@@ -38,7 +41,6 @@ st.markdown(
   --neon3:#4F8EF7;         /* electric blue */
 }
 
-/* Overall padding */
 .block-container { padding-top: 2rem; padding-bottom: 2.5rem; }
 
 /* Sidebar */
@@ -58,20 +60,17 @@ p, label, span { color: var(--text); }
 .title-neon{
   display: inline-block;
   padding-bottom: .35rem;
-  border-bottom: 1px solid rgba(57,255,182,0.35);
-  box-shadow: 0 14px 32px rgba(57,255,182,0.06);
+  border-bottom: 1px solid rgba(57,255,182,0.40);
+  box-shadow: 0 14px 32px rgba(57,255,182,0.08);
 }
 
 /* Metric cards */
 [data-testid="metric-container"]{
-  background: radial-gradient(1200px 160px at 10% 0%, rgba(93,91,255,0.12), rgba(0,0,0,0) 55%),
+  background: radial-gradient(1200px 160px at 10% 0%, rgba(93,91,255,0.14), rgba(0,0,0,0) 55%),
               linear-gradient(180deg, var(--panel) 0%, #0B1017 100%);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: 16px;
   padding: 1rem 1rem;
-}
-[data-testid="metric-container"] div{
-  color: var(--text);
 }
 
 /* Buttons */
@@ -79,48 +78,61 @@ p, label, span { color: var(--text); }
   border-radius: 12px;
   font-weight: 650;
   padding: 0.60rem 0.90rem;
-  border: 1px solid rgba(79,142,247,0.25);
-  background: linear-gradient(180deg, rgba(79,142,247,0.12) 0%, rgba(79,142,247,0.04) 100%);
+  border: 1px solid rgba(79,142,247,0.28);
+  background: linear-gradient(180deg, rgba(79,142,247,0.14) 0%, rgba(79,142,247,0.05) 100%);
 }
 .stButton > button:hover{
-  border-color: rgba(57,255,182,0.35);
-  box-shadow: 0 10px 28px rgba(57,255,182,0.10);
+  border-color: rgba(57,255,182,0.42);
+  box-shadow: 0 10px 28px rgba(57,255,182,0.12);
 }
 
 /* Inputs */
 [data-baseweb="select"] > div, [data-baseweb="input"] input{
   border-radius: 12px !important;
-  border-color: rgba(255,255,255,0.10) !important;
-  background-color: rgba(16,24,36,0.55) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  background-color: rgba(16,24,36,0.58) !important;
 }
 
-/* Dataframe */
+/* Dataframe container */
 [data-testid="stDataFrame"]{
-  border: 1px solid var(--border);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: 16px;
   overflow: hidden;
+}
+
+/* Dataframe: header + zebra + hover */
+[data-testid="stDataFrame"] thead tr th {
+  background: rgba(93, 91, 255, 0.12) !important;
+  color: #E6EDF3 !important;
+  font-weight: 800 !important;
+  border-bottom: 1px solid rgba(255,255,255,0.12) !important;
+}
+[data-testid="stDataFrame"] tbody tr:nth-child(odd) {
+  background-color: rgba(255,255,255,0.02) !important;
+}
+[data-testid="stDataFrame"] tbody tr:hover {
+  background-color: rgba(57,255,182,0.07) !important;
 }
 
 /* Dividers */
 hr{ border-color: rgba(255,255,255,0.08); }
 
-/* Tabs - more futuristic */
+/* Tabs */
 button[data-baseweb="tab"]{
   font-weight: 650;
   color: var(--muted);
 }
 button[data-baseweb="tab"][aria-selected="true"]{
   color: var(--text);
-  border-bottom: 2px solid rgba(57,255,182,0.8) !important;
+  border-bottom: 2px solid rgba(57,255,182,0.85) !important;
 }
 
-/* Links / link buttons */
-a, a:visited { color: rgba(57,255,182,0.9); }
+/* Links */
+a, a:visited { color: rgba(57,255,182,0.92); }
 </style>
 """,
     unsafe_allow_html=True,
 )
-
 
 # ----------------------------
 # Constants / Helpers
@@ -151,13 +163,11 @@ def fetch_deputados_from_api() -> pd.DataFrame:
     data = r.json().get("dados", [])
     df = pd.DataFrame(data)
 
-    # Ensure expected columns exist
     expected = ["id", "nome", "siglaPartido", "siglaUf", "uri", "uriPartido", "urlFoto"]
     for c in expected:
         if c not in df.columns:
             df[c] = None
 
-    # Normalize types
     df["nome"] = df["nome"].astype(str)
     df["siglaPartido"] = df["siglaPartido"].astype(str)
     df["siglaUf"] = df["siglaUf"].astype(str)
@@ -213,21 +223,23 @@ def counts_table(series: pd.Series, col_name: str) -> pd.DataFrame:
 
 
 # ----------------------------
-# Charts (matplotlib) - dark integrated, subtle neon
+# Charts (matplotlib) - higher contrast + subtle neon
 # ----------------------------
 def _style_dark_axes(ax):
     fg = "#E6EDF3"
-    muted = "#9AA6B2"
+    muted = "#B6C2CF"          # brighter for contrast
     panel = "#0E141B"
-    grid = (1, 1, 1, 0.08)
+    grid = (1, 1, 1, 0.10)     # a bit more visible
 
     ax.set_facecolor(panel)
-    ax.tick_params(colors=muted)
+    ax.tick_params(colors=muted, labelsize=10)
     for spine in ax.spines.values():
-        spine.set_color((1, 1, 1, 0.10))
+        spine.set_color((1, 1, 1, 0.14))
+
     ax.xaxis.label.set_color(muted)
     ax.yaxis.label.set_color(muted)
     ax.title.set_color(fg)
+
     ax.grid(True, axis="x", color=grid, linewidth=1)
     ax.set_axisbelow(True)
 
@@ -235,20 +247,27 @@ def _style_dark_axes(ax):
 def chart_partidos_bar(df: pd.DataFrame):
     counts = df["siglaPartido"].value_counts().head(20).sort_values()
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(8.2, 5.2))
     fig.patch.set_facecolor("#0B0F14")
     _style_dark_axes(ax)
 
-    # Subtle neon edge: bar with low alpha fill + neon edge
-    bars = ax.barh(counts.index, counts.values)
+    neon_edge = (57/255, 1.0, 182/255, 0.85)
+    fill = (57/255, 1.0, 182/255, 0.22)
+
+    bars = ax.barh(counts.index, counts.values, color=fill)
     for b in bars:
-        b.set_alpha(0.18)
-        b.set_edgecolor((57/255, 1.0, 182/255, 0.70))
-        b.set_linewidth(1.2)
+        b.set_edgecolor(neon_edge)
+        b.set_linewidth(1.4)
 
     ax.set_xlabel("Quantidade")
     ax.set_ylabel("")
     ax.set_title("Deputados por partido (Top 20)")
+
+    maxv = counts.max() if len(counts) else 0
+    for i, v in enumerate(counts.values):
+        ax.text(v + maxv * 0.01, i, str(int(v)), va="center", color="#E6EDF3", fontsize=9)
+
+    ax.set_xlim(0, maxv * 1.10 if maxv else 1)
     fig.tight_layout()
     return fig
 
@@ -256,19 +275,27 @@ def chart_partidos_bar(df: pd.DataFrame):
 def chart_estados_bar(df: pd.DataFrame):
     counts = df["siglaUf"].value_counts().sort_values()
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(8.2, 5.2))
     fig.patch.set_facecolor("#0B0F14")
     _style_dark_axes(ax)
 
-    bars = ax.barh(counts.index, counts.values)
+    neon_edge = (79/255, 142/255, 247/255, 0.85)
+    fill = (79/255, 142/255, 247/255, 0.22)
+
+    bars = ax.barh(counts.index, counts.values, color=fill)
     for b in bars:
-        b.set_alpha(0.18)
-        b.set_edgecolor((79/255, 142/255, 247/255, 0.70))
-        b.set_linewidth(1.2)
+        b.set_edgecolor(neon_edge)
+        b.set_linewidth(1.4)
 
     ax.set_xlabel("Quantidade")
     ax.set_ylabel("")
     ax.set_title("Deputados por UF")
+
+    maxv = counts.max() if len(counts) else 0
+    for i, v in enumerate(counts.values):
+        ax.text(v + maxv * 0.01, i, str(int(v)), va="center", color="#E6EDF3", fontsize=9)
+
+    ax.set_xlim(0, maxv * 1.10 if maxv else 1)
     fig.tight_layout()
     return fig
 
@@ -276,26 +303,33 @@ def chart_estados_bar(df: pd.DataFrame):
 def chart_top5_pizza(df: pd.DataFrame):
     counts = df["siglaPartido"].value_counts().head(5)
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(5.8, 4.2))  # smaller footprint
     fig.patch.set_facecolor("#0B0F14")
     ax.set_facecolor("#0E141B")
 
-    # Keep it subtle: no loud colors; dark wedges with neon edge
     wedges, texts, autotexts = ax.pie(
         counts.values,
         labels=counts.index,
         autopct="%1.1f%%",
         startangle=90,
-        textprops={"color": "#E6EDF3"},
+        pctdistance=0.78,
+        labeldistance=1.05,
+        textprops={"color": "#E6EDF3", "fontsize": 10},
+        wedgeprops={
+            "linewidth": 1.4,
+            "edgecolor": (93/255, 91/255, 1.0, 0.75),
+            "alpha": 0.28,
+        },
     )
-    for w in wedges:
-        w.set_alpha(0.25)
-        w.set_edgecolor((93/255, 91/255, 1.0, 0.65))
-        w.set_linewidth(1.2)
+
+    # donut hole
+    centre_circle = plt.Circle((0, 0), 0.55, fc="#0E141B")
+    ax.add_artist(centre_circle)
 
     for t in autotexts:
         t.set_color("#E6EDF3")
         t.set_fontweight("600")
+        t.set_fontsize(11)
 
     ax.set_title("Participação do Top 5 partidos")
     fig.tight_layout()
@@ -355,15 +389,42 @@ def deputy_details_card(row: dict):
             st.link_button("Abrir referência", uri)
 
 
+def render_table(df: pd.DataFrame, percent_col: str | None = None):
+    """
+    Elegant table: adds % column (optional), formats numbers, keeps a clean look.
+    """
+    dfx = df.copy()
+
+    if percent_col and percent_col in dfx.columns:
+        total = dfx[percent_col].sum()
+        if total > 0:
+            dfx["%"] = (dfx[percent_col] / total * 100).round(1)
+
+    # Format numbers
+    fmt_map = {}
+    if "qtdDeputados" in dfx.columns:
+        fmt_map["qtdDeputados"] = "{:,.0f}".format
+    if "%" in dfx.columns:
+        fmt_map["%"] = "{:.1f}%".format
+
+    styler = (
+        dfx.style
+        .format(fmt_map)
+        .set_properties(**{"font-size": "14px"})
+    )
+
+    st.dataframe(styler, use_container_width=True, hide_index=True)
+
+
 # ----------------------------
-# Header (minimal, futuristic)
+# Header
 # ----------------------------
 st.markdown('<h1 class="title-neon">Análise de Deputados Federais</h1>', unsafe_allow_html=True)
 st.caption("Dashboard interativa para explorar a composição atual da Câmara: partidos, UFs e distribuição proporcional.")
 
 
 # ----------------------------
-# Sidebar (minimal, no emojis)
+# Sidebar (minimal)
 # ----------------------------
 with st.sidebar:
     st.markdown("## Controles")
@@ -408,7 +469,7 @@ if df.empty:
 
 
 # ----------------------------
-# Filters (dynamic)
+# Filters
 # ----------------------------
 all_partidos = sorted(df["siglaPartido"].dropna().unique().tolist())
 all_ufs = sorted(df["siglaUf"].dropna().unique().tolist())
@@ -436,12 +497,12 @@ df_f = apply_filters(df, partidos_sel=partidos_sel, ufs_sel=ufs_sel, sort_by=sor
 
 
 # ----------------------------
-# Tabs (minimal labels)
+# Tabs
 # ----------------------------
 tabs = st.tabs(["Visão geral", "Partidos", "Estados", "Deputados", "Sobre"])
 
 
-# --- Tab 1: Visão geral ---
+# --- Visão geral ---
 with tabs[0]:
     kpi_row(df_f)
     st.divider()
@@ -455,40 +516,41 @@ with tabs[0]:
         st.markdown("### Deputados por UF")
         st.pyplot(chart_estados_bar(df_f), clear_figure=True)
 
-    # "Secret but robust": advanced view inside expander (clean UI, power-user option)
+    # "secret but robust" section
     with st.expander("Análises avançadas", expanded=False):
-        st.markdown("### Participação do Top 5 partidos")
-        st.pyplot(chart_top5_pizza(df_f), clear_figure=True)
+        colA, colB = st.columns([1, 1.6], gap="large")
+        with colA:
+            st.pyplot(chart_top5_pizza(df_f), clear_figure=True)
+        with colB:
+            st.markdown("### Exportação")
+            st.caption("Baixe os dados considerando os filtros atuais.")
+            download_csv_button(df_f, "deputados_filtrados.csv", label="Baixar CSV (filtros atuais)")
 
-        st.markdown("#### Exportação")
-        download_csv_button(df_f, "deputados_filtrados.csv", label="Baixar CSV (filtros atuais)")
-
-    # Quick download (still available, but understated)
     st.divider()
     download_csv_button(df_f, "deputados_filtrados.csv", label="Baixar CSV")
 
 
-# --- Tab 2: Partidos ---
+# --- Partidos ---
 with tabs[1]:
     st.markdown("### Ranking de partidos")
     cont_partidos = counts_table(df_f["siglaPartido"], "siglaPartido")
-    st.dataframe(cont_partidos, use_container_width=True, hide_index=True)
+    render_table(cont_partidos, percent_col="qtdDeputados")
 
     st.divider()
     download_csv_button(cont_partidos, "contagem_partidos.csv", label="Baixar CSV")
 
 
-# --- Tab 3: Estados ---
+# --- Estados ---
 with tabs[2]:
     st.markdown("### Ranking por UF")
     cont_ufs = counts_table(df_f["siglaUf"], "siglaUf")
-    st.dataframe(cont_ufs, use_container_width=True, hide_index=True)
+    render_table(cont_ufs, percent_col="qtdDeputados")
 
     st.divider()
     download_csv_button(cont_ufs, "contagem_estados.csv", label="Baixar CSV")
 
 
-# --- Tab 4: Deputados ---
+# --- Deputados ---
 with tabs[3]:
     st.markdown("### Explorar deputados")
     search = st.text_input("Buscar por nome", value="", placeholder="Digite um nome...")
@@ -497,7 +559,12 @@ with tabs[3]:
     if search.strip():
         df_view = df_view[df_view["nome"].str.contains(search, case=False, na=False)]
 
-    st.dataframe(df_view.head(page_size), use_container_width=True, hide_index=True)
+    # Show fewer columns by default (cleaner), but keep robust
+    preferred_cols = ["nome", "siglaPartido", "siglaUf"]
+    cols = [c for c in preferred_cols if c in df_view.columns]
+    table_df = df_view[cols] if cols else df_view
+
+    st.dataframe(table_df.head(page_size), use_container_width=True, hide_index=True)
 
     st.divider()
     st.markdown("### Detalhes")
@@ -512,7 +579,7 @@ with tabs[3]:
     download_csv_button(df_view, "deputados_explorados.csv", label="Baixar CSV")
 
 
-# --- Tab 5: Sobre ---
+# --- Sobre ---
 with tabs[4]:
     st.markdown(
         """
